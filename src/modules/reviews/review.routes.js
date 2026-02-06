@@ -13,14 +13,18 @@ const router = express.Router();
 
 // Public profile reviews for a user
 router.get(
-  "/users/:id",
+  "/users/:userId",
   validate(userReviewsParamSchema),
   asyncHandler(reviewController.forUser),
 );
 
 router.use(protect);
 
-router.post("/", validate(createReviewSchema), asyncHandler(reviewController.create));
+router.post(
+  "/",
+  validate(createReviewSchema),
+  asyncHandler(reviewController.create),
+);
 router.get(
   "/me/received",
   validate(paginationQuerySchema),
