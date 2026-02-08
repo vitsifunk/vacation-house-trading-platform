@@ -40,54 +40,61 @@ export default function Register() {
   return (
     <div className="page">
       <div className="auth-card">
-      <h2 className="page-title">Register</h2>
+        <h2 className="page-title">Register</h2>
+        <p className="text-muted mb-sm">
+          Create your account to start listing homes and sending swap requests.
+        </p>
 
-      <form onSubmit={onSubmit} className="stack-sm">
-        <input
-          name="name"
-          placeholder="Full name"
-          value={form.name}
-          onChange={onChange}
-          required
-          minLength={2}
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={onChange}
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password (min 8 chars)"
-          value={form.password}
-          onChange={onChange}
-          required
-          minLength={8}
-        />
-        <input
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm password"
-          value={form.confirmPassword}
-          onChange={onChange}
-          required
-          minLength={8}
-        />
+        <form onSubmit={onSubmit} className="stack-sm">
+          <input
+            name="name"
+            placeholder="Full name"
+            value={form.name}
+            onChange={onChange}
+            autoComplete="name"
+            required
+            minLength={2}
+          />
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={onChange}
+            autoComplete="email"
+            required
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password (min 8 chars)"
+            value={form.password}
+            onChange={onChange}
+            autoComplete="new-password"
+            required
+            minLength={8}
+          />
+          <input
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirm password"
+            value={form.confirmPassword}
+            onChange={onChange}
+            autoComplete="new-password"
+            required
+            minLength={8}
+          />
 
-        {error ? <div className="text-error">{error}</div> : null}
+          {error ? <div className="text-error">{error}</div> : null}
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating account..." : "Create Account"}
-        </button>
-      </form>
+          <button type="submit" disabled={loading}>
+            {loading ? "Creating account..." : "Create Account"}
+          </button>
+        </form>
 
-      <p className="text-muted">
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
+        <p className="text-muted">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
       </div>
     </div>
   );

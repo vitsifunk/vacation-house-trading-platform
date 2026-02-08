@@ -9,6 +9,7 @@ import Chat from "./pages/Chat";
 import MyHouses from "./pages/MyHouses";
 import Profile from "./pages/Profile";
 import Notifications from "./pages/Notifications";
+import Messages from "./pages/Messages";
 import UserProfile from "./pages/UserProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
@@ -75,6 +76,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Notifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <Messages />
               </ProtectedRoute>
             }
           />

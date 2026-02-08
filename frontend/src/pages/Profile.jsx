@@ -129,38 +129,23 @@ export default function Profile() {
     }
   }
 
-  if (loading) return <div style={{ padding: 24 }}>Loading profile...</div>;
+  if (loading) return <div className="page">Loading profile...</div>;
 
   return (
-    <div style={{ padding: 24, color: "#222" }}>
-      <h2>My Profile</h2>
-      {error ? <div style={{ color: "crimson", marginBottom: 10 }}>{error}</div> : null}
-      {message ? <div style={{ color: "green", marginBottom: 10 }}>{message}</div> : null}
+    <div className="page">
+      <h2 className="page-title">My Profile</h2>
+      {error ? <div className="text-error mb-sm">{error}</div> : null}
+      {message ? <div className="text-success mb-sm">{message}</div> : null}
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 10,
-          padding: 14,
-          marginBottom: 16,
-          maxWidth: 680,
-          background: "#fff",
-        }}
-      >
-        <h3 style={{ marginTop: 0 }}>Profile Details</h3>
-        <form onSubmit={saveProfile} style={{ display: "grid", gap: 10 }}>
+      <section className="panel section-gap profile-panel">
+        <h3 className="section-title">Profile Details</h3>
+        <form onSubmit={saveProfile} className="stack-sm">
           {form.avatarUrl ? (
             <div>
               <img
                 src={form.avatarUrl}
                 alt="Avatar preview"
-                style={{
-                  width: 96,
-                  height: 96,
-                  objectFit: "cover",
-                  borderRadius: "50%",
-                  border: "1px solid #ddd",
-                }}
+                className="avatar-preview"
               />
             </div>
           ) : null}
@@ -169,6 +154,7 @@ export default function Profile() {
             placeholder="Name"
             value={form.name}
             onChange={onChange}
+            autoComplete="name"
             required
             minLength={2}
           />
@@ -177,8 +163,9 @@ export default function Profile() {
             placeholder="Location"
             value={form.location}
             onChange={onChange}
+            autoComplete="address-level2"
           />
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <div className="split-row">
             <input
               type="file"
               accept="image/*"
@@ -192,6 +179,9 @@ export default function Profile() {
               {uploadingAvatar ? "Uploading..." : "Upload Avatar"}
             </button>
           </div>
+          {avatarFile ? (
+            <div className="text-muted mt-xs">Selected: {avatarFile.name}</div>
+          ) : null}
           <textarea
             name="bio"
             placeholder="Bio"
@@ -200,30 +190,23 @@ export default function Profile() {
             maxLength={400}
             rows={4}
           />
+          <div className="text-muted mt-xs">{form.bio.length}/400 characters</div>
           <button type="submit" disabled={savingProfile}>
             {savingProfile ? "Saving..." : "Save Profile"}
           </button>
         </form>
       </section>
 
-      <section
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: 10,
-          padding: 14,
-          marginBottom: 16,
-          maxWidth: 680,
-          background: "#fff",
-        }}
-      >
-        <h3 style={{ marginTop: 0 }}>Change Password</h3>
-        <form onSubmit={savePassword} style={{ display: "grid", gap: 10 }}>
+      <section className="panel section-gap profile-panel">
+        <h3 className="section-title">Change Password</h3>
+        <form onSubmit={savePassword} className="stack-sm">
           <input
             type="password"
             name="currentPassword"
             placeholder="Current password"
             value={pwd.currentPassword}
             onChange={onPwdChange}
+            autoComplete="current-password"
             minLength={8}
             required
           />
@@ -233,6 +216,7 @@ export default function Profile() {
             placeholder="New password"
             value={pwd.newPassword}
             onChange={onPwdChange}
+            autoComplete="new-password"
             minLength={8}
             required
           />
@@ -242,6 +226,7 @@ export default function Profile() {
             placeholder="Confirm new password"
             value={pwd.confirmPassword}
             onChange={onPwdChange}
+            autoComplete="new-password"
             minLength={8}
             required
           />
@@ -251,10 +236,15 @@ export default function Profile() {
         </form>
       </section>
 
-      <section style={{ maxWidth: 680 }}>
+      <section className="panel profile-panel">
+        <h3 className="section-title">Danger Zone</h3>
+        <p className="text-muted mb-sm">
+          Deactivating your account signs you out and moves your listings to draft.
+        </p>
         <button
+          type="button"
           onClick={deactivateAccount}
-          style={{ background: "#b00020", color: "white", border: "none", padding: "8px 12px" }}
+          className="danger-btn"
         >
           Deactivate Account
         </button>

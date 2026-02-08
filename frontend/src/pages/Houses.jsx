@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import HouseCard from "../components/HouseCard";
+import EmptyState from "../components/EmptyState";
+import Loader from "../components/Loader";
 import { fetchHouses } from "../api/houses";
 
 export default function Houses() {
@@ -58,7 +60,12 @@ export default function Houses() {
     await loadHouses();
   }
 
-  if (loading) return <div className="page">Loading houses...</div>;
+  if (loading)
+    return (
+      <div className="page">
+        <Loader label="Loading houses..." />
+      </div>
+    );
   if (error)
     return <div className="page text-error">{error}</div>;
 
@@ -97,7 +104,12 @@ export default function Houses() {
       </form>
 
       {houses.length === 0 ? (
-        <p>No houses found.</p>
+        <EmptyState
+          title="No houses found"
+          body="Try adjusting your filters or clear them to see more listings."
+          actionLabel="Reset Filters"
+          actionOnClick={handleReset}
+        />
       ) : (
         <div className="cards-grid">
           {houses.map((h) => (

@@ -23,30 +23,38 @@ export default function Login() {
   return (
     <div className="page">
       <div className="auth-card">
-      <h2 className="page-title">Login</h2>
+        <h2 className="page-title">Login</h2>
+        <p className="text-muted mb-sm">
+          Welcome back. Sign in to manage listings, swaps, and messages.
+        </p>
 
-      <form onSubmit={handleSubmit} className="stack-sm">
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <form onSubmit={handleSubmit} className="stack-sm">
+          <input
+            placeholder="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
 
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <input
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
 
-        {error ? <div className="text-error">{error}</div> : null}
+          {error ? <div className="text-error">{error}</div> : null}
 
-        <button type="submit">Login</button>
-      </form>
+          <button type="submit">Login</button>
+        </form>
 
-      <p className="text-muted">
-        New here? <Link to="/register">Create an account</Link>
-      </p>
+        <p className="text-muted">
+          New here? <Link to="/register">Create an account</Link>
+        </p>
       </div>
     </div>
   );

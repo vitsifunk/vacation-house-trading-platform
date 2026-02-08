@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { acceptSwap, fetchMySwaps, rejectSwap } from "../api/swaps";
+import { acceptSwap, cancelSwap, fetchMySwaps, rejectSwap } from "../api/swaps";
+import EmptyState from "../components/EmptyState";
+import Loader from "../components/Loader";
+import { useToast } from "../components/ToastProvider";
 
 function fmtDate(input) {
   try {
@@ -11,6 +14,7 @@ function fmtDate(input) {
 }
 
 export default function SwapRequests() {
+  const toast = useToast();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
@@ -39,15 +43,42 @@ export default function SwapRequests() {
     try {
       if (type === "accept") await acceptSwap(id);
       if (type === "reject") await rejectSwap(id);
+      toast.success(type === "accept" ? "Request accepted." : "Request rejected.");
       await load();
     } catch (err) {
       setError(err?.response?.data?.message || "Request action failed");
+      toast.error("Request action failed.");
     } finally {
       setBusyId("");
     }
   }
 
-  if (loading) return <div className="page">Loading swap requests...</div>;
+  async function onCancel(swap) {
+    const ok = window.confirm(
+      `Cancel this swap request for "${swap.targetHouse?.title || "-"}"?`,
+    );
+    if (!ok) return;
+    setBusyId(swap._id);
+    setError("");
+    try {
+      await cancelSwap(swap._id);
+      toast.success("Swap request cancelled.");
+      await load();
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to cancel request");
+      toast.error("Failed to cancel request.");
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="page">
+        <Loader label="Loading swap requests..." />
+      </div>
+    );
+  }
 
   return (
     <div className="page">
@@ -55,37 +86,39 @@ export default function SwapRequests() {
       {error ? <div className="text-error mb-sm">{error}</div> : null}
 
       {requests.length === 0 ? (
-        <p>No pending swap requests.</p>
+        <EmptyState
+          title="No pending requests"
+          body="New incoming swap requests will appear here."
+          actionLabel="Browse Houses"
+          actionTo="/houses"
+        />
       ) : (
         <div className="stack-md">
           {requests.map((swap) => (
-            <article
-              key={swap._id}
-              style={{
-                border: "1px solid #d9d9d9",
-                borderRadius: 10,
-                padding: 12,
-              }}
-            >
-              <div>
-                <strong>Requester:</strong> {swap.requester?.name || "-"}
+            <article key={swap._id} className="card swap-card">
+              <div className="swap-meta-grid">
+                <strong className="card-heading">Requester:</strong>{" "}
+                <span>{swap.requester?.name || "-"}</span>
               </div>
-              <div>
+              <div className="swap-meta-grid">
                 <strong>Requester house:</strong> {swap.requesterHouse?.title || "-"}
               </div>
-              <div>
+              <div className="swap-meta-grid">
                 <strong>Your house:</strong> {swap.targetHouse?.title || "-"}
               </div>
-              <div>
-                <strong>Dates:</strong> {fmtDate(swap.startDate)} - {fmtDate(swap.endDate)}
+              <div className="swap-meta-grid">
+                <strong className="card-heading">Dates:</strong>{" "}
+                <span className="card-subtle">
+                  {fmtDate(swap.startDate)} - {fmtDate(swap.endDate)}
+                </span>
               </div>
-              <div style={{ marginTop: 8 }}>
+              <div className="mt-sm">
                 <strong>Requester message:</strong>
-                <div style={{ marginTop: 4, whiteSpace: "pre-wrap" }}>
+                <div className="mt-xs text-prewrap">
                   {swap.message?.trim() ? swap.message : "No message provided."}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <div className="actions-row mt-sm">
                 <button
                   onClick={() => onAction("accept", swap._id)}
                   disabled={busyId === swap._id}
@@ -98,7 +131,17 @@ export default function SwapRequests() {
                 >
                   Reject
                 </button>
-                <Link style={{ alignSelf: "center" }} to={`/swaps/${swap._id}/chat`}>
+                <button
+                  onClick={() => onCancel(swap)}
+                  disabled={busyId === swap._id}
+                  className="danger-btn"
+                >
+                  Cancel
+                </button>
+                <Link
+                  className="btn-link"
+                  to={`/swaps/${swap._id}/chat`}
+                >
                   Open Chat
                 </Link>
               </div>

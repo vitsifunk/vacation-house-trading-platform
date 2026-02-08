@@ -16,6 +16,7 @@ router.get(
   validate(listNotificationsSchema),
   asyncHandler(notificationController.list),
 );
+router.delete("/", asyncHandler(notificationController.deleteAll));
 
 router.get("/unread-count", asyncHandler(notificationController.unreadCount));
 
@@ -25,6 +26,11 @@ router.patch(
   "/:id/read",
   validate(notificationIdParamSchema),
   asyncHandler(notificationController.markRead),
+);
+router.delete(
+  "/:id",
+  validate(notificationIdParamSchema),
+  asyncHandler(notificationController.deleteOne),
 );
 
 module.exports = router;
