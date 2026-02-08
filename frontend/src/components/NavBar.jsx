@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMe, logout } from "../api/auth";
 import { fetchUnreadCount } from "../api/notifications";
@@ -45,46 +45,45 @@ export default function NavBar() {
   }
 
   return (
-    <header className="navbar-wrap">
-      <nav className="navbar">
-        <div className="nav-left">
-          <NavLink className="nav-brand" to="/houses">
-            SwapNest
-          </NavLink>
-          <NavLink className="nav-link" to="/houses">
-            Houses
-          </NavLink>
-          <NavLink className="nav-link" to="/my-houses">
-            My Houses
-          </NavLink>
-          <NavLink className="nav-link" to="/swap-requests">
-            Swap Requests
-          </NavLink>
-          <NavLink className="nav-link" to="/swaps">
-            Accepted Swaps
-          </NavLink>
-        </div>
+    <div
+      style={{
+        display: "flex",
+        gap: 12,
+        alignItems: "center",
+        padding: 12,
+        borderBottom: "1px solid #eee",
+      }}
+    >
+      <Link to="/houses">Houses</Link>
+      <Link to="/my-houses">My Houses</Link>
+      <Link to="/swaps">My Swaps</Link>
       {me ? (
-        <NavLink className="nav-link" to="/notifications">
+        <Link to="/notifications">
           Notifications{unread > 0 ? ` (${unread})` : ""}
-        </NavLink>
+        </Link>
       ) : null}
-      {me ? <NavLink className="nav-link" to="/profile">Profile</NavLink> : null}
+      {me ? <Link to="/profile">Profile</Link> : null}
 
-      <div className="nav-right">
+      <div
+        style={{
+          marginLeft: "auto",
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
         {me ? (
           <>
-            <span className="nav-user">Hi, {me.name}</span>
+            <span style={{ opacity: 0.8 }}>Hi, {me.name}</span>
             <button onClick={handleLogout}>Logout</button>
           </>
         ) : (
           <>
-            <NavLink className="nav-link" to="/login">Login</NavLink>
-            <NavLink className="nav-link" to="/register">Register</NavLink>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
           </>
         )}
       </div>
-      </nav>
-    </header>
+    </div>
   );
 }
