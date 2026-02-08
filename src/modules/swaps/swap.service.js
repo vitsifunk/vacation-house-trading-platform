@@ -39,7 +39,10 @@ async function createSwap(requesterId, payload) {
     throw new AppError("You cannot request a swap with your own house", 400);
   }
   if (requesterHouse.status !== "published") {
-    throw new AppError("Your house must be published before requesting swaps", 409);
+    throw new AppError(
+      "Your house must be published before requesting swaps",
+      409,
+    );
   }
   if (targetHouse.status !== "published") {
     throw new AppError("Target house is not published", 409);
@@ -47,7 +50,10 @@ async function createSwap(requesterId, payload) {
 
   // availability check on requester house (covers requested range)
   if (!rangeIsCoveredByAvailability(requesterHouse, s, e)) {
-    throw new AppError("Your house is not available for the requested dates", 409);
+    throw new AppError(
+      "Your house is not available for the requested dates",
+      409,
+    );
   }
 
   // availability check on target house (covers requested range)
@@ -190,7 +196,9 @@ async function acceptSwap(userId, swapId) {
         throw new AppError("Swap is no longer pending", 409);
       }
 
-      const targetHouse = await House.findById(swap.targetHouse).session(session);
+      const targetHouse = await House.findById(swap.targetHouse).session(
+        session,
+      );
       if (!targetHouse) throw new AppError("Target house not found", 404);
 
       const s = new Date(swap.startDate);
@@ -200,7 +208,10 @@ async function acceptSwap(userId, swapId) {
         (r) => s >= r.startDate && e <= r.endDate,
       );
       if (!covered) {
-        throw new AppError("Target house is no longer available for these dates", 409);
+        throw new AppError(
+          "Target house is no longer available for these dates",
+          409,
+        );
       }
 
       targetHouse.availability = subtractRange(targetHouse.availability, s, e);
@@ -254,7 +265,7 @@ async function rejectSwap(userId, swapId) {
   swap.respondedAt = new Date();
   await swap.save();
 
-  // ÎµÎ¹Î´Î¿Ï€Î¿Î¯Î·ÏƒÎ· ÏƒÏ„Î¿Î½ requester
+  // requester
   await createNotification({
     user: swap.requester,
     type: "swap_rejected",
@@ -299,7 +310,10 @@ async function cancelSwap(userId, swapId) {
       const freshSwap = await Swap.findById(swapId).session(session);
       if (!freshSwap) throw new AppError("Swap not found", 404);
       if (!["pending", "accepted"].includes(freshSwap.status)) {
-        throw new AppError("Only pending or accepted swaps can be cancelled", 409);
+        throw new AppError(
+          "Only pending or accepted swaps can be cancelled",
+          409,
+        );
       }
 
       if (freshSwap.status === "accepted") {
@@ -325,7 +339,9 @@ async function cancelSwap(userId, swapId) {
     await session.endSession();
   }
 
-  const otherParty = isRequester ? cancelledSwap.targetOwner : cancelledSwap.requester;
+  const otherParty = isRequester
+    ? cancelledSwap.targetOwner
+    : cancelledSwap.requester;
   await createNotification({
     user: otherParty,
     type: "swap_cancelled",
@@ -350,4 +366,3 @@ module.exports = {
     addRangeAndMerge,
   },
 };
-

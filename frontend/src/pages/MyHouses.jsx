@@ -754,7 +754,9 @@ export default function MyHouses() {
             title="No listings yet"
             body="Create your first listing using the form above."
             actionLabel="Go To Create Form"
-            actionOnClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            actionOnClick={() =>
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            }
           />
         ) : (
           <div className="stack-md">
