@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { login } from "../api/auth";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -21,10 +21,11 @@ export default function Login() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 420 }}>
-      <h2>Login</h2>
+    <div className="page">
+      <div className="auth-card">
+      <h2 className="page-title">Login</h2>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
+      <form onSubmit={handleSubmit} className="stack-sm">
         <input
           placeholder="Email"
           value={email}
@@ -38,10 +39,15 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {error ? <div style={{ color: "crimson" }}>{error}</div> : null}
+        {error ? <div className="text-error">{error}</div> : null}
 
         <button type="submit">Login</button>
       </form>
+
+      <p className="text-muted">
+        New here? <Link to="/register">Create an account</Link>
+      </p>
+      </div>
     </div>
   );
 }

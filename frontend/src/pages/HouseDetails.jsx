@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getMe } from "../api/auth";
 import { fetchHouseById, fetchUserHouses } from "../api/houses";
 import { createSwap } from "../api/swaps";
@@ -114,7 +114,12 @@ export default function HouseDetails() {
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <strong>Owner:</strong> {house.owner?.name || "Unknown"}
+        <strong>Owner:</strong>{" "}
+        {house.owner?._id ? (
+          <Link to={`/users/${house.owner._id}`}>{house.owner?.name || "Unknown"}</Link>
+        ) : (
+          house.owner?.name || "Unknown"
+        )}
       </div>
 
       <div style={{ marginTop: 16 }}>

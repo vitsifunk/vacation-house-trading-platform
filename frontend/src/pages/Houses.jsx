@@ -58,22 +58,14 @@ export default function Houses() {
     await loadHouses();
   }
 
-  if (loading) return <div style={{ padding: 24 }}>Loading houses...</div>;
+  if (loading) return <div className="page">Loading houses...</div>;
   if (error)
-    return <div style={{ padding: 24, color: "crimson" }}>{error}</div>;
+    return <div className="page text-error">{error}</div>;
 
   return (
-    <div style={{ padding: 24, color: "#222" }}>
-      <h2>Houses</h2>
-      <form
-        onSubmit={handleSearch}
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-          gap: 10,
-          marginBottom: 18,
-        }}
-      >
+    <div className="page">
+      <h2 className="page-title">Houses</h2>
+      <form onSubmit={handleSearch} className="panel filters-grid">
         <input
           name="q"
           placeholder="Keyword"
@@ -107,13 +99,7 @@ export default function Houses() {
       {houses.length === 0 ? (
         <p>No houses found.</p>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 14,
-          }}
-        >
+        <div className="cards-grid">
           {houses.map((h) => (
             <HouseCard key={h._id} house={h} />
           ))}

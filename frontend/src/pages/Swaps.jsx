@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  acceptSwap,
-  cancelSwap,
-  fetchMySwaps,
-  rejectSwap,
-} from "../api/swaps";
+import { fetchMySwaps } from "../api/swaps";
 
 function fmtDate(input) {
   try {
@@ -15,9 +10,7 @@ function fmtDate(input) {
   }
 }
 
-function SwapItem({ swap, role, onAction, busyId }) {
-  const isPending = swap.status === "pending";
-
+function SwapItem({ swap, role }) {
   return (
     <article
       style={{
@@ -50,34 +43,6 @@ function SwapItem({ swap, role, onAction, busyId }) {
         </div>
       )}
 
-      {isPending ? (
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-          {role === "received" ? (
-            <>
-              <button
-                onClick={() => onAction("accept", swap._id)}
-                disabled={busyId === swap._id}
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => onAction("reject", swap._id)}
-                disabled={busyId === swap._id}
-              >
-                Reject
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => onAction("cancel", swap._id)}
-              disabled={busyId === swap._id}
-            >
-              Cancel
-            </button>
-          )}
-        </div>
-      ) : null}
-
       <div style={{ marginTop: 10 }}>
         <Link to={`/swaps/${swap._id}/chat`}>Open Chat</Link>
       </div>
@@ -89,14 +54,16 @@ export default function Swaps() {
   const [data, setData] = useState({ sent: [], received: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [busyId, setBusyId] = useState("");
 
   async function load() {
     setLoading(true);
     setError("");
     try {
       const result = await fetchMySwaps();
-      setData(result);
+      setData({
+        sent: (result.sent || []).filter((s) => s.status === "accepted"),
+        received: (result.received || []).filter((s) => s.status === "accepted"),
+      });
     } catch {
       setError("Failed to load swaps");
     } finally {
@@ -108,27 +75,13 @@ export default function Swaps() {
     load();
   }, []);
 
-  async function onAction(type, id) {
-    setBusyId(id);
-    setError("");
-    try {
-      if (type === "accept") await acceptSwap(id);
-      if (type === "reject") await rejectSwap(id);
-      if (type === "cancel") await cancelSwap(id);
-      await load();
-    } catch (err) {
-      setError(err?.response?.data?.message || "Swap action failed");
-    } finally {
-      setBusyId("");
-    }
-  }
-
-  if (loading) return <div style={{ padding: 24 }}>Loading swaps...</div>;
+  if (loading) return <div className="page">Loading swaps...</div>;
 
   return (
-    <div style={{ padding: 24, color: "#222" }}>
-      <h2>My Swaps</h2>
-      {error ? <div style={{ color: "crimson", marginBottom: 12 }}>{error}</div> : null}
+    <div className="page">
+      <h2 className="page-title">My Swaps</h2>
+      {error ? <div className="text-error mb-sm">{error}</div> : null}
+      <p className="text-muted">Only accepted swaps are shown here.</p>
 
       <section style={{ marginTop: 16 }}>
         <h3>Received</h3>
@@ -140,8 +93,6 @@ export default function Swaps() {
               key={s._id}
               swap={s}
               role="received"
-              onAction={onAction}
-              busyId={busyId}
             />
           ))
         )}
@@ -157,8 +108,6 @@ export default function Swaps() {
               key={s._id}
               swap={s}
               role="sent"
-              onAction={onAction}
-              busyId={busyId}
             />
           ))
         )}

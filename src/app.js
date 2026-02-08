@@ -4,11 +4,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 
 const { buildCorsOptions } = require("./config/cors");
-const {
-  apiLimiter,
-  authLimiter,
-  messageLimiter,
-} = require("./shared/middlewares/rateLimiters");
+const { apiLimiter, messageLimiter } = require("./shared/middlewares/rateLimiters");
 
 const routes = require("./routes");
 const { errorHandler } = require("./shared/errors/errorHandler");
@@ -23,8 +19,7 @@ app.use(cors(buildCorsOptions()));
 
 // Rate limiters
 app.use("/api", apiLimiter);
-app.use("/api/v1/auth", authLimiter);
-app.use("/api/v1/messages", messageLimiter); // optional αλλά ωραίο
+app.use("/api/v1/messages", messageLimiter);
 
 // Body + cookies
 app.use(express.json({ limit: "12mb" }));

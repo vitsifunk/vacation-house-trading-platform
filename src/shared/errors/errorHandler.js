@@ -3,15 +3,25 @@ const { env } = require("../../config/env");
 const { logger } = require("../logger");
 
 function errorHandler(err, req, res, _next) {
-  // log ΠΑΝΤΑ (τουλάχιστον σε dev)
-  logger.error(
-    {
-      err,
-      method: req.method,
-      path: req.originalUrl,
-    },
-    "Request error",
-  );
+  // Expected guest check: frontend may call GET /auth/me without cookie.
+  // Keep response as 401 but avoid noisy error-level logs.
+  const isExpectedAuthMe401 =
+    err instanceof AppError &&
+    err.statusCode === 401 &&
+    req.method === "GET" &&
+    req.path === "/api/v1/auth/me";
+
+  const logPayload = {
+    err,
+    method: req.method,
+    path: req.originalUrl,
+  };
+
+  if (isExpectedAuthMe401) {
+    logger.warn(logPayload, "Request warning");
+  } else {
+    logger.error(logPayload, "Request error");
+  }
 
   // Mongoose invalid ObjectId / cast error => 400
   if (err && err.name === "CastError") {
@@ -21,7 +31,7 @@ function errorHandler(err, req, res, _next) {
     });
   }
 
-  // αν είναι operational error, το στέλνουμε όπως είναι
+  // operational error
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       status: "error",
@@ -37,12 +47,11 @@ function errorHandler(err, req, res, _next) {
     });
   }
 
-  // dev: δείξε το πραγματικό error message για να κάνουμε debug
+  // dev: show real message for debugging
   if (env.nodeEnv !== "production") {
     return res.status(500).json({
       status: "error",
       message: err.message || "Internal Server Error",
-      // προαιρετικά:
       stack: err.stack,
     });
   }

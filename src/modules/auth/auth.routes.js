@@ -1,6 +1,7 @@
 const express = require("express");
 const { asyncHandler } = require("../../shared/middlewares/asyncHandler");
 const { validate } = require("../../shared/middlewares/validate");
+const { authLimiter } = require("../../shared/middlewares/rateLimiters");
 const { registerSchema, loginSchema } = require("./auth.schemas");
 const authController = require("./auth.controller");
 const { protect } = require("../../shared/middlewares/auth");
@@ -10,6 +11,7 @@ const router = express.Router();
 // Δημιουργία λογαριασμού
 router.post(
   "/register",
+  authLimiter,
   validate(registerSchema),
   asyncHandler(authController.register),
 );
@@ -17,6 +19,7 @@ router.post(
 // Σύνδεση χρήστη
 router.post(
   "/login",
+  authLimiter,
   validate(loginSchema),
   asyncHandler(authController.login),
 );
