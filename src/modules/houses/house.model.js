@@ -37,15 +37,20 @@ const houseSchema = new mongoose.Schema(
 
       // GeoJSON point (optional for now)
       geo: {
-        type: {
-          type: String,
-          enum: ["Point"],
-          default: "Point",
-        },
-        coordinates: {
-          type: [Number], // [lng, lat]
-          default: undefined,
-        },
+        type: new mongoose.Schema(
+          {
+            type: {
+              type: String,
+              enum: ["Point"],
+            },
+            coordinates: {
+              type: [Number], // [lng, lat]
+              default: undefined,
+            },
+          },
+          { _id: false },
+        ),
+        default: undefined,
       },
     },
 
@@ -82,6 +87,19 @@ houseSchema.index({ "location.geo": "2dsphere" });
 
 // Βασικό sanity check για availability
 houseSchema.pre("validate", function () {
+  // Keep geo optional: only persist when valid [lng, lat] is provided.
+  const coords = this.location?.geo?.coordinates;
+  const validCoords =
+    Array.isArray(coords) &&
+    coords.length === 2 &&
+    coords.every((n) => typeof n === "number" && Number.isFinite(n));
+
+  if (!validCoords) {
+    this.location.geo = undefined;
+  } else {
+    this.location.geo.type = "Point";
+  }
+
   for (const r of this.availability) {
     if (r.startDate >= r.endDate) {
       this.invalidate("availability", "startDate must be before endDate");

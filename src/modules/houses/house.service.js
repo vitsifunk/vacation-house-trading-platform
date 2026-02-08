@@ -40,6 +40,10 @@ async function getHouseById(id) {
   return house;
 }
 
+async function listMyHouses(ownerId) {
+  return House.find({ owner: ownerId }).sort("-createdAt");
+}
+
 // Για το search, θα θέλαμε να δώσουμε διάφορα φίλτρα και να επιστρέψουμε paginated αποτελέσματα
 
 async function searchHouses(filters) {
@@ -137,4 +141,72 @@ async function addAvailability(houseId, ownerId, range) {
   return house;
 }
 
-module.exports = { createHouse, getHouseById, searchHouses, addAvailability };
+async function updateHouse(houseId, ownerId, payload) {
+  const house = await House.findById(houseId);
+  if (!house) throw new AppError("House not found", 404);
+
+  if (String(house.owner) !== String(ownerId)) {
+    throw new AppError("Forbidden", 403);
+  }
+
+  const scalarFields = [
+    "title",
+    "description",
+    "capacity",
+    "rooms",
+    "beds",
+    "baths",
+    "amenities",
+    "photos",
+    "rules",
+    "status",
+  ];
+
+  for (const key of scalarFields) {
+    if (payload[key] !== undefined) house[key] = payload[key];
+  }
+
+  if (payload.location) {
+    house.location.country = payload.location.country ?? house.location.country;
+    house.location.city = payload.location.city ?? house.location.city;
+    house.location.address = payload.location.address ?? house.location.address;
+
+    if (payload.location.coordinates) {
+      house.location.geo = {
+        type: "Point",
+        coordinates: payload.location.coordinates,
+      };
+    }
+  }
+
+  if (payload.availability) {
+    house.availability = payload.availability.map((r) => ({
+      startDate: new Date(r.startDate),
+      endDate: new Date(r.endDate),
+    }));
+  }
+
+  await house.save();
+  return house;
+}
+
+async function deleteHouse(houseId, ownerId) {
+  const house = await House.findById(houseId);
+  if (!house) throw new AppError("House not found", 404);
+
+  if (String(house.owner) !== String(ownerId)) {
+    throw new AppError("Forbidden", 403);
+  }
+
+  await house.deleteOne();
+}
+
+module.exports = {
+  createHouse,
+  getHouseById,
+  listMyHouses,
+  updateHouse,
+  deleteHouse,
+  searchHouses,
+  addAvailability,
+};

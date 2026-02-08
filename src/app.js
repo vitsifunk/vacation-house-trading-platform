@@ -27,7 +27,7 @@ app.use("/api/v1/auth", authLimiter);
 app.use("/api/v1/messages", messageLimiter); // optional αλλά ωραίο
 
 // Body + cookies
-app.use(express.json());
+app.use(express.json({ limit: "12mb" }));
 app.use(cookieParser());
 
 // Routes

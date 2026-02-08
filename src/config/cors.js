@@ -1,7 +1,7 @@
 const { env } = require("./env");
 
-// Π.χ. στο .env:
-// CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+// Example in .env:
+// CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 function buildCorsOptions() {
   const raw = env.corsOrigins || "";
   const allowedOrigins = raw
@@ -9,13 +9,23 @@ function buildCorsOptions() {
     .map((s) => s.trim())
     .filter(Boolean);
 
+  const isDev = env.nodeEnv !== "production";
+  const isLocalDevOrigin = (origin) =>
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+
   return {
     origin(origin, cb) {
-      // Allow non-browser clients (Postman / curl) χωρίς Origin header
+      // Allow non-browser clients (Postman/curl) without Origin header
       if (!origin) return cb(null, true);
 
-      // Αν δεν έχεις βάλει CORS_ORIGINS, σε dev επιτρέπουμε όλα (όχι recommended για prod)
-      if (allowedOrigins.length === 0 && env.nodeEnv !== "production") {
+      // If CORS_ORIGINS is empty in development, allow all
+      if (allowedOrigins.length === 0 && isDev) {
+        return cb(null, true);
+      }
+
+      // In development, also allow localhost/127.0.0.1 with any port
+      // (helps when Vite auto-switches from 5173 to 5174, etc.)
+      if (isDev && isLocalDevOrigin(origin)) {
         return cb(null, true);
       }
 
@@ -23,7 +33,7 @@ function buildCorsOptions() {
       return cb(new Error("Not allowed by CORS"), false);
     },
 
-    credentials: true, // για cookies
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   };

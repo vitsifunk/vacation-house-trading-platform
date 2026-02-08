@@ -5,6 +5,7 @@ const { asyncHandler } = require("../../shared/middlewares/asyncHandler");
 
 const {
   createHouseSchema,
+  updateHouseSchema,
   searchHousesSchema,
   houseIdParamSchema,
   addAvailabilitySchema,
@@ -27,6 +28,25 @@ router.post(
   protect,
   validate(createHouseSchema),
   asyncHandler(houseController.create),
+);
+
+// My houses (logged in)
+router.get("/mine", protect, asyncHandler(houseController.my));
+
+// Update listing (logged in, owner only)
+router.patch(
+  "/:id",
+  protect,
+  validate(updateHouseSchema),
+  asyncHandler(houseController.update),
+);
+
+// Delete listing (logged in, owner only)
+router.delete(
+  "/:id",
+  protect,
+  validate(houseIdParamSchema),
+  asyncHandler(houseController.remove),
 );
 
 // Add availability (logged in, owner only)
