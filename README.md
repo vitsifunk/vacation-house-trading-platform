@@ -44,10 +44,12 @@ npm install
 npm run dev
 
 Testing
+
 Tested using Postman
 Verified authentication, protected routes, and API responses
 
 What I Learned
+
 Designing and building scalable REST APIs
 Implementing authentication and authorization using JWT
 Structuring backend applications with MVC architecture
@@ -55,6 +57,7 @@ Handling real-world backend logic (messaging, notifications)
 Working with MongoDB and Mongoose for data modeling
 
 Future Improvements
+
 Image upload optimization
 Real-time messaging (WebSockets)
 Frontend UI enhancements
