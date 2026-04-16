@@ -37,21 +37,6 @@ This project was developed as part of my dissertation, with a strong focus on ba
 
 ---
 
-## 📬 API Example
-
-### Create House Listing
-
-
-POST /api/v1/houses
-
-
-```json
-{
-  "title": "Sea View Apartment",
-  "location": "Athens",
-  "price": 120
-}
-
 ⚙️ Installation & Setup
 git clone https://github.com/vitsifunk/Dissertation-Project-Vacation-House-Trading-Platform
 cd Dissertation-Project-Vacation-House-Trading-Platform
