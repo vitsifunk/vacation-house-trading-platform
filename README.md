@@ -35,6 +35,12 @@ A full-stack web application that allows users to list, search, and exchange vac
 - `POST /api/v1/swaps`
 - `GET /api/v1/notifications`
 
+What I Learned
+Building RESTful APIs
+Structuring backend code with controllers, routes, and middleware
+Implementing authentication and authorization
+Designing database models for real-world features
+
 ## Installation
 
 ```bash
@@ -42,3 +48,4 @@ git clone https://github.com/YOUR_USERNAME/YOUR_REPO
 cd project
 npm install
 npm run dev
+
