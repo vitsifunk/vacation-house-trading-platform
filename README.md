@@ -2,44 +2,81 @@
 
 A full-stack web application that allows users to list, search, and exchange vacation houses.
 
-## Features
+This project was developed as part of my dissertation, with a strong focus on backend architecture, API design, and real-world functionality.
 
-- User authentication (JWT & cookies)
-- Create, update, and manage house listings
-- Availability management system
-- House search & filtering
-- Swap request system between users
-- Real-time messaging between participants
-- Notifications system (read/unread)
+---
 
 ## Tech Stack
 
-- Backend: Node.js, Express
-- Database: MongoDB Atlas
-- Authentication: JWT (JSON Web Tokens)
-- API: RESTful architecture
+- **Backend:** Node.js, Express
+- **Database:** MongoDB Atlas (Mongoose)
+- **Authentication:** JWT (JSON Web Tokens) with cookies
+- **Architecture:** RESTful API, MVC pattern
 
-## Project Structure
+---
 
-- `/controllers` – request handling logic
-- `/models` – database schemas (Mongoose)
-- `/routes` – API endpoints
-- `/middlewares` – auth, validation, error handling
-- `/services` – business logic
+## Core Features
 
-## API Highlights
+-  User authentication & authorization (JWT)
+-  Create, update, and manage house listings
+-  Availability management system
+-  Search and filter houses
+-  Swap request system between users
+-  Messaging system (restricted to swap participants)
+-  Notifications system (unread count, mark as read)
 
-- `POST /api/v1/auth/login`
-- `GET /api/v1/houses`
-- `POST /api/v1/houses/:id/availability`
-- `POST /api/v1/swaps`
-- `GET /api/v1/notifications`
+---
 
-## Installation
+## Backend Highlights
 
-```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO
-cd project
+- Structured using controllers, routes, services, and middlewares
+- Centralized error handling
+- Request validation for secure API usage
+- Protected routes with authentication middleware
+- Modular and scalable code structure
+
+---
+
+## 📬 API Example
+
+### Create House Listing
+
+
+POST /api/v1/houses
+
+
+```json
+{
+  "title": "Sea View Apartment",
+  "location": "Athens",
+  "price": 120
+}
+
+⚙️ Installation & Setup
+git clone https://github.com/vitsifunk/Dissertation-Project-Vacation-House-Trading-Platform
+cd Dissertation-Project-Vacation-House-Trading-Platform
 npm install
 npm run dev
 
+Testing
+Tested using Postman
+Verified authentication, protected routes, and API responses
+
+What I Learned
+Designing and building scalable REST APIs
+Implementing authentication and authorization using JWT
+Structuring backend applications with MVC architecture
+Handling real-world backend logic (messaging, notifications)
+Working with MongoDB and Mongoose for data modeling
+
+Future Improvements
+Image upload optimization
+Real-time messaging (WebSockets)
+Frontend UI enhancements
+Deployment (Docker / Cloud)
+
+👤 Author
+Vaios Tsiaras
+📧 vitsifunk@hotmail.com
+
+🔗 https://github.com/vitsifunk
