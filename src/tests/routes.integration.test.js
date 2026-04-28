@@ -122,4 +122,30 @@ describe("route integration", () => {
     expect(res.body.status).toBe("success");
     expect(acceptSwapMock).toHaveBeenCalledWith(TARGET_USER_ID, SWAP_ID);
   });
+
+  test("GET /api/v1/reviews/users/:userId returns public user reviews", async () => {
+    const listForUserMock = jest.fn().mockResolvedValue({
+      items: [],
+      summary: { avgRating: 0, count: 0 },
+      page: 1,
+      limit: 20,
+      total: 0,
+      pages: 0,
+    });
+
+    jest.doMock("../modules/reviews/review.service", () => ({
+      createReview: jest.fn(),
+      listReceived: jest.fn(),
+      listGiven: jest.fn(),
+      listForUser: listForUserMock,
+    }));
+
+    const app = require("../app");
+
+    const res = await request(app).get(`/api/v1/reviews/users/${TARGET_USER_ID}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(listForUserMock).toHaveBeenCalledWith(TARGET_USER_ID, {});
+  });
 });

@@ -31,6 +31,13 @@ function errorHandler(err, req, res, _next) {
     });
   }
 
+  if (err && err.code === 11000) {
+    return res.status(409).json({
+      status: "error",
+      message: "Duplicate value",
+    });
+  }
+
   // operational error
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({

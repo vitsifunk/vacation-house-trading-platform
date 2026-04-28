@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { acceptSwap, cancelSwap, fetchMySwaps, rejectSwap } from "../api/swaps";
 import EmptyState from "../components/EmptyState";
 import Loader from "../components/Loader";
-import { useToast } from "../components/ToastProvider";
+import { useToast } from "../components/toastContext";
 
 function fmtDate(input) {
   try {

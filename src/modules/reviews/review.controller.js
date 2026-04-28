@@ -20,7 +20,10 @@ async function myGiven(req, res) {
 }
 
 async function forUser(req, res) {
-  const data = await reviewService.listForUser(req.params.id, req.validated.query);
+  const data = await reviewService.listForUser(
+    req.params.userId,
+    req.validated.query,
+  );
   res.json({ status: "success", data });
 }
 

@@ -114,35 +114,29 @@ async function listMySwaps(userId) {
 }
 
 function overlaps(aStart, aEnd, bStart, bEnd) {
-  return aStart < bEnd && aEnd > bStart; // true Î±Î½ Î­Ï‡Î¿Ï…Î½ overlap
+  return aStart < bEnd && aEnd > bStart;
 }
 
 function subtractRange(availability, s, e) {
-  // ÎšÏŒÎ²ÎµÎ¹ Ï„Î¿ [s,e] Î±Ï€ÏŒ Ï„Î± Ï…Ï€Î¬ÏÏ‡Î¿Î½Ï„Î± ranges ÎºÎ±Î¹ ÎµÏ€Î¹ÏƒÏ„ÏÎ­Ï†ÎµÎ¹ Î½Î­Î± Î»Î¯ÏƒÏ„Î± ranges
   const out = [];
 
   for (const r of availability) {
     const rStart = new Date(r.startDate);
     const rEnd = new Date(r.endDate);
 
-    // no overlap -> ÎºÏÎ±Ï„Î¬Î¼Îµ ÏŒÏ€Ï‰Ï‚ ÎµÎ¯Î½Î±Î¹
     if (!overlaps(s, e, rStart, rEnd)) {
       out.push({ startDate: rStart, endDate: rEnd });
       continue;
     }
 
-    // overlap: Î¼Ï€Î¿ÏÎµÎ¯ Î½Î± Î¼ÎµÎ¯Î½Î¿Ï…Î½ 0, 1 Î® 2 ÎºÎ¿Î¼Î¼Î¬Ï„Î¹Î±
-    // Î±ÏÎ¹ÏƒÏ„ÎµÏÏŒ ÎºÎ¿Î¼Î¼Î¬Ï„Î¹
     if (rStart < s) {
       out.push({ startDate: rStart, endDate: s });
     }
-    // Î´ÎµÎ¾Î¯ ÎºÎ¿Î¼Î¼Î¬Ï„Î¹
+
     if (rEnd > e) {
       out.push({ startDate: e, endDate: rEnd });
     }
   }
-
-  // Ï†Î¹Î»Ï„ÏÎ¬ÏÎ¿Ï…Î¼Îµ invalid ranges
   return out.filter((x) => x.startDate < x.endDate);
 }
 
@@ -196,25 +190,39 @@ async function acceptSwap(userId, swapId) {
         throw new AppError("Swap is no longer pending", 409);
       }
 
+      const requesterHouse = await House.findById(swap.requesterHouse).session(
+        session,
+      );
       const targetHouse = await House.findById(swap.targetHouse).session(
         session,
       );
+      if (!requesterHouse) throw new AppError("Requester house not found", 404);
       if (!targetHouse) throw new AppError("Target house not found", 404);
 
       const s = new Date(swap.startDate);
       const e = new Date(swap.endDate);
 
-      const covered = targetHouse.availability.some(
-        (r) => s >= r.startDate && e <= r.endDate,
-      );
-      if (!covered) {
+      if (!rangeIsCoveredByAvailability(requesterHouse, s, e)) {
+        throw new AppError(
+          "Requester house is no longer available for these dates",
+          409,
+        );
+      }
+
+      if (!rangeIsCoveredByAvailability(targetHouse, s, e)) {
         throw new AppError(
           "Target house is no longer available for these dates",
           409,
         );
       }
 
+      requesterHouse.availability = subtractRange(
+        requesterHouse.availability,
+        s,
+        e,
+      );
       targetHouse.availability = subtractRange(targetHouse.availability, s, e);
+      await requesterHouse.save({ session });
       await targetHouse.save({ session });
 
       swap.status = "accepted";
@@ -224,10 +232,13 @@ async function acceptSwap(userId, swapId) {
       await Swap.updateMany(
         {
           _id: { $ne: swap._id },
-          targetHouse: swap.targetHouse,
           status: "pending",
           startDate: { $lt: e },
           endDate: { $gt: s },
+          $or: [
+            { requesterHouse: { $in: [swap.requesterHouse, swap.targetHouse] } },
+            { targetHouse: { $in: [swap.requesterHouse, swap.targetHouse] } },
+          ],
         },
         {
           $set: { status: "rejected", respondedAt: new Date() },
@@ -284,7 +295,10 @@ async function cancelSwap(userId, swapId) {
   const isRequester = String(swap.requester) === String(userId);
   const isTargetOwner = String(swap.targetOwner) === String(userId);
   if (!isRequester && !isTargetOwner) {
-    throw new AppError("Only requester or target owner can cancel this swap", 403);
+    throw new AppError(
+      "Only requester or target owner can cancel this swap",
+      403,
+    );
   }
 
   if (!["pending", "accepted"].includes(swap.status)) {
@@ -317,16 +331,26 @@ async function cancelSwap(userId, swapId) {
       }
 
       if (freshSwap.status === "accepted") {
+        const requesterHouse = await House.findById(
+          freshSwap.requesterHouse,
+        ).session(session);
         const targetHouse = await House.findById(freshSwap.targetHouse).session(
           session,
         );
+        if (!requesterHouse) throw new AppError("Requester house not found", 404);
         if (!targetHouse) throw new AppError("Target house not found", 404);
 
+        requesterHouse.availability = addRangeAndMerge(
+          requesterHouse.availability,
+          freshSwap.startDate,
+          freshSwap.endDate,
+        );
         targetHouse.availability = addRangeAndMerge(
           targetHouse.availability,
           freshSwap.startDate,
           freshSwap.endDate,
         );
+        await requesterHouse.save({ session });
         await targetHouse.save({ session });
       }
 

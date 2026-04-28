@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { cancelSwap, fetchMySwaps } from "../api/swaps";
+import { createReview, fetchMyGivenReviews } from "../api/reviews";
 import EmptyState from "../components/EmptyState";
 import Loader from "../components/Loader";
-import { useToast } from "../components/ToastProvider";
+import { useToast } from "../components/toastContext";
 const CANCELLATION_CUTOFF_DAYS = 7;
 
 function fmtDate(input) {
@@ -21,8 +22,69 @@ function canCancelAcceptedSwap(swap) {
   return new Date() <= cutoff;
 }
 
-function SwapItem({ swap, role, onCancel, busy }) {
+function isCompletedSwap(swap) {
+  return new Date(swap.endDate) < new Date();
+}
+
+function getReviewee(swap, role) {
+  return role === "received" ? swap.requester : swap.targetOwner;
+}
+
+function ReviewForm({
+  draft,
+  disabled,
+  onChange,
+  onSubmit,
+}) {
+  return (
+    <form className="review-form mt-sm" onSubmit={onSubmit}>
+      <label>
+        Rating
+        <select
+          value={draft.rating}
+          onChange={(e) => onChange({ ...draft, rating: Number(e.target.value) })}
+          disabled={disabled}
+        >
+          {[5, 4, 3, 2, 1].map((rating) => (
+            <option key={rating} value={rating}>
+              {rating}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Comment
+        <textarea
+          rows={3}
+          maxLength={1000}
+          value={draft.comment}
+          onChange={(e) => onChange({ ...draft, comment: e.target.value })}
+          disabled={disabled}
+        />
+      </label>
+      <div className="form-actions">
+        <button type="submit" disabled={disabled}>
+          {disabled ? "Submitting..." : "Submit Review"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function SwapItem({
+  swap,
+  role,
+  onCancel,
+  busy,
+  reviewDraft,
+  reviewBusy,
+  reviewed,
+  onReviewDraftChange,
+  onReview,
+}) {
   const canCancel = canCancelAcceptedSwap(swap);
+  const completed = isCompletedSwap(swap);
+  const reviewee = getReviewee(swap, role);
   return (
     <article className="card swap-card">
       <div className="swap-meta-grid">
@@ -60,16 +122,31 @@ function SwapItem({ swap, role, onCancel, busy }) {
         <button
           type="button"
           onClick={() => onCancel(swap)}
-          disabled={busy || !canCancel}
+          disabled={busy || !canCancel || completed}
           className="danger-btn"
         >
           {busy ? "Cancelling..." : "Cancel Swap"}
         </button>
       </div>
-      {!canCancel ? (
+      {!canCancel && !completed ? (
         <div className="text-muted mt-xs">
           Cancellation is allowed only up to {CANCELLATION_CUTOFF_DAYS} days before start date.
         </div>
+      ) : null}
+      {completed ? (
+        reviewed ? (
+          <div className="text-success mt-sm">Review submitted.</div>
+        ) : (
+          <ReviewForm
+            draft={reviewDraft}
+            disabled={reviewBusy}
+            onChange={onReviewDraftChange}
+            onSubmit={(e) => {
+              e.preventDefault();
+              onReview(swap, reviewee);
+            }}
+          />
+        )
       ) : null}
     </article>
   );
@@ -78,23 +155,69 @@ function SwapItem({ swap, role, onCancel, busy }) {
 export default function Swaps() {
   const toast = useToast();
   const [data, setData] = useState({ sent: [], received: [] });
+  const [reviewedKeys, setReviewedKeys] = useState([]);
+  const [reviewDrafts, setReviewDrafts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [reviewingId, setReviewingId] = useState("");
 
   async function load() {
     setLoading(true);
     setError("");
     try {
-      const result = await fetchMySwaps();
+      const [result, givenReviews] = await Promise.all([
+        fetchMySwaps(),
+        fetchMyGivenReviews(),
+      ]);
       setData({
         sent: (result.sent || []).filter((s) => s.status === "accepted"),
         received: (result.received || []).filter((s) => s.status === "accepted"),
       });
+      setReviewedKeys(
+        (givenReviews.items || []).map(
+          (r) => `${r.swap?._id || r.swap}-${r.reviewee?._id || r.reviewee}`,
+        ),
+      );
     } catch {
       setError("Failed to load swaps");
     } finally {
       setLoading(false);
+    }
+  }
+
+  function reviewKey(swap, reviewee) {
+    return `${swap._id}-${reviewee?._id || reviewee}`;
+  }
+
+  function getDraft(swapId) {
+    return reviewDrafts[swapId] || { rating: 5, comment: "" };
+  }
+
+  async function onReview(swap, reviewee) {
+    const revieweeId = reviewee?._id || reviewee;
+    if (!revieweeId) {
+      setError("Could not determine who to review.");
+      return;
+    }
+
+    setReviewingId(swap._id);
+    setError("");
+    try {
+      const draft = getDraft(swap._id);
+      await createReview({
+        swapId: swap._id,
+        revieweeId,
+        rating: Number(draft.rating),
+        comment: draft.comment.trim(),
+      });
+      setReviewedKeys((prev) => [...new Set([...prev, reviewKey(swap, reviewee)])]);
+      toast.success("Review submitted.");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to submit review");
+      toast.error("Failed to submit review.");
+    } finally {
+      setReviewingId("");
     }
   }
 
@@ -148,14 +271,21 @@ export default function Swaps() {
         ) : (
           <div className="stack-md">
             {data.received.map((s) => (
-              <SwapItem
-                key={s._id}
-                swap={s}
-                role="received"
-                onCancel={onCancel}
-                busy={busyId === s._id}
-              />
-            ))}
+                <SwapItem
+                  key={s._id}
+                  swap={s}
+                  role="received"
+                  onCancel={onCancel}
+                  busy={busyId === s._id}
+                  reviewDraft={getDraft(s._id)}
+                  reviewBusy={reviewingId === s._id}
+                  reviewed={reviewedKeys.includes(reviewKey(s, getReviewee(s, "received")))}
+                  onReviewDraftChange={(draft) =>
+                    setReviewDrafts((prev) => ({ ...prev, [s._id]: draft }))
+                  }
+                  onReview={onReview}
+                />
+              ))}
           </div>
         )}
       </section>
@@ -172,14 +302,21 @@ export default function Swaps() {
         ) : (
           <div className="stack-md">
             {data.sent.map((s) => (
-              <SwapItem
-                key={s._id}
-                swap={s}
-                role="sent"
-                onCancel={onCancel}
-                busy={busyId === s._id}
-              />
-            ))}
+                <SwapItem
+                  key={s._id}
+                  swap={s}
+                  role="sent"
+                  onCancel={onCancel}
+                  busy={busyId === s._id}
+                  reviewDraft={getDraft(s._id)}
+                  reviewBusy={reviewingId === s._id}
+                  reviewed={reviewedKeys.includes(reviewKey(s, getReviewee(s, "sent")))}
+                  onReviewDraftChange={(draft) =>
+                    setReviewDrafts((prev) => ({ ...prev, [s._id]: draft }))
+                  }
+                  onReview={onReview}
+                />
+              ))}
           </div>
         )}
       </section>

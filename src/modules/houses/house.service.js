@@ -35,7 +35,10 @@ async function createHouse(ownerId, payload) {
 }
 
 async function getHouseById(id) {
-  const house = await House.findById(id).populate("owner", "name");
+  const house = await House.findOne({ _id: id, status: "published" }).populate(
+    "owner",
+    "name",
+  );
   if (!house) throw new AppError("House not found", 404);
   return house;
 }

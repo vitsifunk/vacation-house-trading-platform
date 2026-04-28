@@ -17,8 +17,9 @@ async function register({ name, email, password }) {
 }
 
 async function login({ email, password }) {
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email }).select("+password +active");
   if (!user) throw new AppError("Invalid credentials", 401);
+  if (user.active === false) throw new AppError("Account is deactivated", 401);
 
   const ok = await user.comparePassword(password);
   if (!ok) throw new AppError("Invalid credentials", 401);

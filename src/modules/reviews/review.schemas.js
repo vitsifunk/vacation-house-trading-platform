@@ -19,7 +19,7 @@ const createReviewSchema = z.object({
 
 const userReviewsParamSchema = z.object({
   params: z.object({
-    id: objectId,
+    userId: objectId,
   }),
   query: paginationQuerySchema.shape.query,
 });

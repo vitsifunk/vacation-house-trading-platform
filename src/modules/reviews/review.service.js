@@ -18,6 +18,9 @@ async function createReview(reviewerId, payload) {
   if (swap.status !== "accepted") {
     throw new AppError("Reviews are allowed only for accepted swaps", 409);
   }
+  if (new Date(swap.endDate) > new Date()) {
+    throw new AppError("Reviews are allowed after the swap has ended", 409);
+  }
 
   const isRequester = String(swap.requester) === String(reviewerId);
   const isTargetOwner = String(swap.targetOwner) === String(reviewerId);
@@ -33,6 +36,15 @@ async function createReview(reviewerId, payload) {
   }
   if (String(revieweeId) === String(reviewerId)) {
     throw new AppError("You cannot review yourself", 400);
+  }
+
+  const existing = await Review.findOne({
+    reviewer: reviewerId,
+    reviewee: revieweeId,
+    swap: swapId,
+  });
+  if (existing) {
+    throw new AppError("You already reviewed this user for this swap", 409);
   }
 
   const review = await Review.create({
